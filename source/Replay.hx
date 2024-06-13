@@ -11,97 +11,91 @@ import haxe.Json;
 import flixel.input.keyboard.FlxKey;
 import openfl.utils.Dictionary;
 
+typedef KeyPress =
+{
+    public var time:Float;
+    public var key:String;
+}
+
+typedef KeyRelease =
+{
+    public var time:Float;
+    public var key:String;
+}
+
 typedef ReplayJSON =
 {
-	public var replayGameVer:String;
-	public var timestamp:Date;
-	public var songName:String;
-	public var songDiff:Int;
-	public var songNotes:Array<Float>;
-	public var noteSpeed:Float;
-	public var isDownscroll:Bool;
+    public var replayGameVer:String;
+    public var timestamp:Date;
+    public var songName:String;
+    public var songDiff:Int;
+    public var keyPresses:Array<KeyPress>;
+    public var keyReleases:Array<KeyRelease>;
 }
 
 class Replay
 {
-	public static var version:String = "1.0"; // replay file version
+    public static var version:String = "1.0"; // replay file version
 
-	public var path:String = "";
-	public var replay:ReplayJSON;
+    public var path:String = "";
+    public var replay:ReplayJSON;
+    public function new(path:String)
+    {
+        this.path = path;
+        replay = {
+            songName: "Tutorial", 
+            songDiff: 1, 
+            keyPresses: [],
+            keyReleases: [],
+            replayGameVer: version,
+            timestamp: Date.now()
+        };
+    }
 
-	public function new(path:String)
-	{
-		this.path = path;
-		replay = {
-			songName: "Tutorial",
-			songDiff: 1,
-			noteSpeed: 1.5,
-			isDownscroll: false,
-			songNotes: [],
-			replayGameVer: version,
-			timestamp: Date.now()
-		};
-	}
+    public static function LoadReplay(path:String):Replay
+    {
+        var rep:Replay = new Replay(path);
 
-	public static function LoadReplay(path:String):Replay
-	{
-		var rep:Replay = new Replay(path);
+        rep.LoadFromJSON();
 
-		rep.LoadFromJSON();
+        trace('basic replay data:\nSong Name: ' + rep.replay.songName + '\nSong Diff: ' + rep.replay.songDiff + '\nKeys Length: ' + rep.replay.keyPresses.length);
 
-		trace('basic replay data:\nSong Name: ' + rep.replay.songName + '\nSong Diff: ' + rep.replay.songDiff + '\nNotes Length: '
-			+ rep.replay.songNotes.length);
+        return rep;
+    }
 
-		return rep;
-	}
+    public function SaveReplay()
+    {
+        var json = {
+            "songName": PlayState.SONG.song.toLowerCase(),
+            "songDiff": PlayState.storyDifficulty,
+            "keyPresses": replay.keyPresses,
+            "keyReleases": replay.keyReleases,
+            "timestamp": Date.now(),
+            "replayGameVer": version
+        };
 
-	public function SaveReplay(notearray:Array<Float>)
-	{
-		var json = {
-			"songName": PlayState.SONG.song.toLowerCase(),
-			"songDiff": PlayState.storyDifficulty,
-			"noteSpeed": (FlxG.save.data.scrollSpeed > 1 ? FlxG.save.data.scrollSpeed : PlayState.SONG.speed),
-			"isDownscroll": FlxG.save.data.downscroll,
-			"songNotes": notearray,
-			"timestamp": Date.now(),
-			"replayGameVer": version
-		};
+        var data:String = Json.stringify(json);
 
-		var data:String = Json.stringify(json);
+        #if sys
+        File.saveContent("assets/replays/replay-" + PlayState.SONG.song + "-time" + Date.now().getTime() + ".kadeReplay", data);
+        #end
+    }
 
-		#if sys
-		File.saveContent(#if mobile SUtil.getStorageDirectory()
-			+ "replays/replay-"
-			+ #else "assets/replays/replay-"
-			+ #end
-			PlayState.SONG.song
-			+ "-time"
-			+ Date.now().getTime()
-			+ ".kadeReplay", data);
-		#end
-	}
 
-	public function LoadFromJSON()
-	{
-		#if sys
-		trace('loading '
-			+ #if mobile SUtil.getStorageDirectory()
-			+ #else Sys.getCwd()
-			+ #end#if mobile 'replays/'
-			+ #else 'assets/replays/'
-			+ #end
-			path
-			+ ' replay...');
-		try
-		{
-			var repl:ReplayJSON = cast Json.parse(File.getContent(#if mobile SUtil.getStorageDirectory() + "replays/" + #else Sys.getCwd()
-				+ "assets/replays/" + #end path));
-			replay = repl;
-		}
-		catch (e)
-		{
-			trace('failed!\n' + e.message);
-		}
-		#end
-	}
+    public function LoadFromJSON()
+    {
+        #if sys
+        trace('loading ' + Sys.getCwd() + 'assets/replays/' + path + ' replay...');
+        try
+        {
+            var repl:ReplayJSON = cast Json.parse(File.getContent(Sys.getCwd() + "assets/replays/" + path));
+            replay = repl;
+        }
+        catch(e)
+        {
+            trace('failed!\n' + e.message);
+        }
+        #end
+    }
+
 }

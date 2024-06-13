@@ -3,20 +3,17 @@ import flixel.FlxG;
 
 class KadeEngineData
 {
-	public static function initSave()
-	{
-		if (FlxG.save.data.newInput == null)
+    public static function initSave()
+    {
+        if (FlxG.save.data.newInput == null)
 			FlxG.save.data.newInput = true;
 
 		if (FlxG.save.data.downscroll == null)
 			FlxG.save.data.downscroll = false;
 
-		if (FlxG.save.data.middleScroll == null)
-			FlxG.save.data.middleScroll = false;
-
 		if (FlxG.save.data.dfjk == null)
 			FlxG.save.data.dfjk = false;
-
+			
 		if (FlxG.save.data.accuracyDisplay == null)
 			FlxG.save.data.accuracyDisplay = true;
 
@@ -29,9 +26,6 @@ class KadeEngineData
 		if (FlxG.save.data.fps == null)
 			FlxG.save.data.fps = false;
 
-		if (FlxG.save.data.noDieAnim == null)
-			FlxG.save.data.noDieAnim = false;
-
 		if (FlxG.save.data.changedHit == null)
 		{
 			FlxG.save.data.changedHitX = -1;
@@ -42,25 +36,14 @@ class KadeEngineData
 		if (FlxG.save.data.fpsRain == null)
 			FlxG.save.data.fpsRain = false;
 
-		#if !mobile
 		if (FlxG.save.data.fpsCap == null)
 			FlxG.save.data.fpsCap = 120;
 
 		if (FlxG.save.data.fpsCap > 285 || FlxG.save.data.fpsCap < 60)
 			FlxG.save.data.fpsCap = 120; // baby proof so you can't hard lock ur copy of kade engine
-		#else
-		if (FlxG.save.data.fpsCap == null)
-			FlxG.save.data.fpsCap = 60;
-
-		if (FlxG.save.data.fpsCap > 285 || FlxG.save.data.fpsCap < 60)
-			FlxG.save.data.fpsCap = 60; // baby proof so you can't hard lock ur copy of kade engine
-		#end
-
+		
 		if (FlxG.save.data.scrollSpeed == null)
 			FlxG.save.data.scrollSpeed = 1;
-
-		if (FlxG.save.data.rmgf == null)
-			FlxG.save.data.rmgf = false;
 
 		if (FlxG.save.data.npsDisplay == null)
 			FlxG.save.data.npsDisplay = false;
@@ -82,34 +65,14 @@ class KadeEngineData
 
 		if (FlxG.save.data.flashing == null)
 			FlxG.save.data.flashing = true;
-
-		if (FlxG.save.data.resetButton == null)
-			FlxG.save.data.resetButton = false;
-
+		
 		if (FlxG.save.data.botplay == null)
 			FlxG.save.data.botplay = false;
 
-		if (FlxG.save.data.pauseMusic == null)
-			FlxG.save.data.pauseMusic = true;
-
-		if (FlxG.save.data.cpuStrums == null)
-			FlxG.save.data.cpuStrums = true;
-
-		if (FlxG.save.data.strumline == null)
-			FlxG.save.data.strumline = false;
-
-		if (FlxG.save.data.customStrumLine == null)
-			FlxG.save.data.customStrumLine = 0;
-
-		if (FlxG.save.data.render == null)
-			FlxG.save.data.render = 0;
-
 		Conductor.recalculateTimings();
-		PlayerSettings.player1.controls.loadKeyBinds();
-		KeyBinds.keyCheck();
 
 		Main.watermarks = FlxG.save.data.watermark;
 
-		(cast(Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
+		(cast (Lib.current.getChildAt(0), Main)).setFPSCap(FlxG.save.data.fpsCap);
 	}
 }

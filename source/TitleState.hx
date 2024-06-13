@@ -1,5 +1,6 @@
 package;
 
+import Controls.KeyboardScheme;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -20,11 +21,14 @@ import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
+import io.newgrounds.NG;
 import lime.app.Application;
 import openfl.Assets;
+
 #if windows
 import Discord.DiscordClient;
 #end
+
 #if cpp
 import sys.thread.Thread;
 #end
@@ -47,18 +51,11 @@ class TitleState extends MusicBeatState
 
 	override public function create():Void
 	{
-		Paths.clearUnusedMemory();
-		Paths.clearStoredMemory();
-
-		#if android
-		FlxG.android.preventDefaultKeys = [BACK];
+		#if polymod
+		polymod.Polymod.init({modRoot: "mods", dirs: ['introMod']});
 		#end
-
-		#if mobile
-		if (!sys.FileSystem.exists(SUtil.getStorageDirectory() + "/replays"))
-			sys.FileSystem.createDirectory(SUtil.getStorageDirectory() + "/replays");
-		#end
-		#if desktop
+		
+		#if sys
 		if (!sys.FileSystem.exists(Sys.getCwd() + "/assets/replays"))
 			sys.FileSystem.createDirectory(Sys.getCwd() + "/assets/replays");
 		#end
@@ -67,16 +64,16 @@ class TitleState extends MusicBeatState
 		{
 			trace("Loaded " + openfl.Assets.getLibrary("default").assetsLoaded + " assets (DEFAULT)");
 		}
-
+		
 		PlayerSettings.init();
 
 		#if windows
 		DiscordClient.initialize();
 
-		Application.current.onExit.add(function(exitCode)
-		{
+		Application.current.onExit.add (function (exitCode) {
 			DiscordClient.shutdown();
-		});
+		 });
+		 
 		#end
 
 		curWacky = FlxG.random.getObject(getIntroTextShit());
@@ -86,6 +83,11 @@ class TitleState extends MusicBeatState
 		super.create();
 
 		// NGio.noLogin(APIStuff.API);
+
+		#if ng
+		var ng:NGio = new NGio(APIStuff.API, APIStuff.EncKey);
+		trace('NEWGROUNDS LOL');
+		#end
 
 		FlxG.save.bind('funkin', 'ninjamuffin99');
 
@@ -153,6 +155,11 @@ class TitleState extends MusicBeatState
 			FlxG.sound.music.fadeIn(4, 0, 0.7);
 		}
 
+		if (FlxG.save.data.dfjk)
+			controls.setKeyboardScheme(KeyboardScheme.Solo, true);
+		else
+			controls.setKeyboardScheme(KeyboardScheme.Duo(true), true);
+
 		Conductor.changeBPM(102);
 		persistentUpdate = true;
 
@@ -171,10 +178,9 @@ class TitleState extends MusicBeatState
 		// logoBl.screenCenter();
 		// logoBl.color = FlxColor.BLACK;
 
-		gfDance = new FlxSprite(FlxG.width * 0.4, FlxG.height * 0.07);
-		gfDance.frames = Paths.getSparrowAtlas('gfDanceTitle');
-		gfDance.animation.addByIndices('danceLeft', 'gfDance', [30, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14], "", 24, false);
-		gfDance.animation.addByIndices('danceRight', 'gfDance', [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], "", 24, false);
+		gfDance = new FlxSprite(FlxG.width * 0.55, FlxG.height * 0.07);
+		gfDance.frames = Paths.getSparrowAtlas('whittyDanceTitle','shared');
+		gfDance.animation.addByPrefix('dance', 'Whitty Dancing Beat', 30, false);
 		gfDance.antialiasing = true;
 		add(gfDance);
 		add(logoBl);
@@ -254,9 +260,14 @@ class TitleState extends MusicBeatState
 			Conductor.songPosition = FlxG.sound.music.time;
 		// FlxG.watch.addQuick('amp', FlxG.sound.music.amplitude);
 
+		if (FlxG.keys.justPressed.F)
+		{
+			FlxG.fullscreen = !FlxG.fullscreen;
+		}
+
 		var pressedEnter:Bool = FlxG.keys.justPressed.ENTER;
 
-		#if (mobileC || mobileCweb)
+		#if mobile
 		for (touch in FlxG.touches.list)
 		{
 			if (touch.justPressed)
@@ -281,8 +292,15 @@ class TitleState extends MusicBeatState
 
 		if (pressedEnter && !transitioning && skippedIntro)
 		{
-			if (FlxG.save.data.flashing)
-				titleText.animation.play('press');
+			#if !switch
+			NGio.unlockMedal(60960);
+
+			// If it's Friday according to da clock
+			if (Date.now().getDay() == 5)
+				NGio.unlockMedal(61034);
+			#end
+
+			titleText.animation.play('press');
 
 			FlxG.camera.flash(FlxColor.WHITE, 1);
 			FlxG.sound.play(Paths.sound('confirmMenu'), 0.7);
@@ -290,41 +308,12 @@ class TitleState extends MusicBeatState
 			transitioning = true;
 			// FlxG.sound.music.stop();
 
-			MainMenuState.firstStart = true;
-
 			new FlxTimer().start(2, function(tmr:FlxTimer)
 			{
+
 				// Get current version of Kade Engine
+				FlxG.switchState(new MainMenuState());
 
-				/*var http = new haxe.Http("https://raw.githubusercontent.com/KadeDev/Kade-Engine/master/version.downloadMe");
-				var returnedData:Array<String> = [];
-
-				http.onData = function(data:String)
-				{
-					returnedData[0] = data.substring(0, data.indexOf(';'));
-					returnedData[1] = data.substring(data.indexOf('-'), data.length);
-					if (!MainMenuState.kadeEngineVer.contains(returnedData[0].trim())
-						&& !OutdatedSubState.leftState
-						&& MainMenuState.nightly == "")
-					{
-						trace('outdated lmao! ' + returnedData[0] + ' != ' + MainMenuState.kadeEngineVer);
-						OutdatedSubState.needVer = returnedData[0];
-						OutdatedSubState.currChanges = returnedData[1];
-						FlxG.switchState(new OutdatedSubState());
-					}
-					else
-					{*/
-						FlxG.switchState(new MainMenuState());
-					/*}
-				}
-
-				http.onError = function(error)
-				{
-					trace('error: $error');
-					FlxG.switchState(new MainMenuState()); // fail but we go anyway
-				}
-
-				http.request();*/
 			});
 			// FlxG.sound.play(Paths.music('titleShoot'), 0.7);
 		}
@@ -374,17 +363,14 @@ class TitleState extends MusicBeatState
 		logoBl.animation.play('bump');
 		danceLeft = !danceLeft;
 
-		if (danceLeft)
-			gfDance.animation.play('danceRight');
-		else
-			gfDance.animation.play('danceLeft');
+		gfDance.animation.play('dance');
 
 		FlxG.log.add(curBeat);
 
 		switch (curBeat)
 		{
 			case 1:
-				createCoolText(['ninjamuffin99', 'phantomArcade', 'kawaisprite', 'evilsk8er']);
+				createCoolText(['Sock.clip', 'Nate Anim8', 'KadeDev', 'and the fnf team']);
 			// credTextShit.visible = true;
 			case 3:
 				addMoreText('present');
@@ -396,18 +382,10 @@ class TitleState extends MusicBeatState
 			// credTextShit.text = 'In association \nwith';
 			// credTextShit.screenCenter();
 			case 5:
-				if (Main.watermarks)
-					createCoolText(['Kade Engine', 'by']);
-				else
-					createCoolText(['In Partnership', 'with']);
+				createCoolText(['Big Love', 'to']);
 			case 7:
-				if (Main.watermarks)
-					addMoreText('KadeDeveloper');
-				else
-				{
-					addMoreText('Newgrounds');
-					ngSpr.visible = true;
-				}
+				addMoreText('Newgrounds');
+				ngSpr.visible = true;
 			// credTextShit.text += '\nNewgrounds';
 			case 8:
 				deleteCoolText();
@@ -428,13 +406,13 @@ class TitleState extends MusicBeatState
 			// credTextShit.text = "Friday";
 			// credTextShit.screenCenter();
 			case 13:
-				addMoreText('Friday');
+				addMoreText('VS');
 			// credTextShit.visible = true;
 			case 14:
-				addMoreText('Night');
+				addMoreText('Whitty');
 			// credTextShit.text += '\nNight';
 			case 15:
-				addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
+				addMoreText('Full Week'); // credTextShit.text += '\nFunkin';
 
 			case 16:
 				skipIntro();

@@ -12,6 +12,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import flixel.util.FlxTimer;
 import lime.net.curl.CURLCode;
+
 #if windows
 import Discord.DiscordClient;
 #end
@@ -24,16 +25,18 @@ class StoryMenuState extends MusicBeatState
 
 	var weekData:Array<Dynamic> = [
 		['Tutorial'],
-		['Bopeebo', 'Fresh', 'Dad Battle'],
+		['Bopeebo', 'Fresh', 'Dadbattle'],
 		['Spookeez', 'South', "Monster"],
-		['Pico', 'Philly Nice', "Blammed"],
-		['Satin Panties', "High", "Milf"],
-		['Cocoa', 'Eggnog', 'Winter Horrorland'],
-		['Senpai', 'Roses', 'Thorns']
+		['Pico', 'Philly', "Blammed"],
+		['Satin-Panties', "High", "Milf"],
+		['Cocoa', 'Eggnog', 'Winter-Horrorland'],
+		['Senpai', 'Roses', 'Thorns'],
+		['Lo-Fight','Overhead', 'Ballistic'],
+
 	];
 	var curDifficulty:Int = 1;
 
-	public static var weekUnlocked:Array<Bool> = [true, true, true, true, true, true, true];
+	public static var weekUnlocked:Array<Bool> = [true, true, true, true, true, true, true, true];
 
 	var weekCharacters:Array<Dynamic> = [
 		['', 'bf', 'gf'],
@@ -42,17 +45,19 @@ class StoryMenuState extends MusicBeatState
 		['pico', 'bf', 'gf'],
 		['mom', 'bf', 'gf'],
 		['parents-christmas', 'bf', 'gf'],
-		['senpai', 'bf', 'gf']
+		['senpai', 'bf', 'gf'],
+		['whitty', 'bf', 'gf'],
 	];
 
 	var weekNames:Array<String> = [
-		"",
+		"How to Funk",
 		"Daddy Dearest",
 		"Spooky Month",
 		"PICO",
 		"MOMMY MUST MURDER",
 		"RED SNOW",
-		"Hating Simulator ft. Moawling"
+		"hating simulator ft. moawling",
+		"Back Alley Blitz",
 	];
 
 	var txtWeekTitle:FlxText;
@@ -73,9 +78,6 @@ class StoryMenuState extends MusicBeatState
 
 	override function create()
 	{
-		Paths.clearUnusedMemory();
-		Paths.clearStoredMemory();
-
 		#if windows
 		// Updating Discord Rich Presence
 		DiscordClient.changePresence("In the Story Mode Menu", null);
@@ -92,7 +94,7 @@ class StoryMenuState extends MusicBeatState
 
 		persistentUpdate = persistentDraw = true;
 
-		scoreText = new FlxText(10, 10, 0, "SCORE: 49324858", 36);
+		scoreText = new FlxText(10, 10, 0, "SCORE: A BILLION LMAOOO", 36);
 		scoreText.setFormat("VCR OSD Mono", 32);
 
 		txtWeekTitle = new FlxText(FlxG.width * 0.7, 10, 0, "", 32);
@@ -133,7 +135,43 @@ class StoryMenuState extends MusicBeatState
 			// weekThing.updateHitbox();
 
 			// Needs an offset thingie
-			if (!weekUnlocked[i])
+
+			if (i == 8)
+				{
+					weekThing.x += 8;
+					weekThing.y -= 64;
+				}
+
+
+			if (i == 8 && FlxG.save.data.hardBeaten != null)
+				{
+					if (!FlxG.save.data.hardBeaten)
+					{
+						var lock:FlxSprite = new FlxSprite(weekThing.width + 10 + weekThing.x);
+						lock.frames = ui_tex;
+						lock.animation.addByPrefix('lock', 'lock');
+						lock.animation.play('lock');
+						lock.ID = i;
+						lock.antialiasing = true;
+						grpLocks.add(lock);
+						weekUnlocked.push(false);
+					}
+					else
+						weekUnlocked.push(true);
+				}
+				else if (i == 8)
+				{
+					var lock:FlxSprite = new FlxSprite(weekThing.width + 10 + weekThing.x);
+						lock.frames = ui_tex;
+						lock.animation.addByPrefix('lock', 'lock');
+						lock.animation.play('lock');
+						lock.ID = i;
+						lock.antialiasing = true;
+						grpLocks.add(lock);
+						weekUnlocked.push(false);
+				}
+			
+			/*if (!weekUnlocked[i] && i != 7)
 			{
 				var lock:FlxSprite = new FlxSprite(weekThing.width + 10 + weekThing.x);
 				lock.frames = ui_tex;
@@ -142,15 +180,16 @@ class StoryMenuState extends MusicBeatState
 				lock.ID = i;
 				lock.antialiasing = true;
 				grpLocks.add(lock);
-			}
+			}*/
 		}
 
 		trace("Line 96");
 
+
 		grpWeekCharacters.add(new MenuCharacter(0, 100, 0.5, false));
 		grpWeekCharacters.add(new MenuCharacter(450, 25, 0.9, true));
 		grpWeekCharacters.add(new MenuCharacter(850, 100, 0.5, true));
-
+		
 		difficultySelectors = new FlxGroup();
 		add(difficultySelectors);
 
@@ -197,10 +236,6 @@ class StoryMenuState extends MusicBeatState
 		updateText();
 
 		trace("Line 165");
-
-		#if (mobileC || mobileCweb)
-		addVirtualPad(LEFT_FULL, A_B);
-		#end
 
 		super.create();
 	}
@@ -305,6 +340,7 @@ class StoryMenuState extends MusicBeatState
 
 			PlayState.SONG = Song.loadFromJson(PlayState.storyPlaylist[0].toLowerCase() + diffic, PlayState.storyPlaylist[0].toLowerCase());
 			PlayState.storyWeek = curWeek;
+			PlayState.loadRep = false;
 			PlayState.campaignScore = 0;
 			new FlxTimer().start(1, function(tmr:FlxTimer)
 			{

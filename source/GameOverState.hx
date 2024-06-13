@@ -23,12 +23,12 @@ class GameOverState extends FlxTransitionableState
 
 	override function create()
 	{
-		var loser:FlxSprite = new FlxSprite(100, 100);
-		var loseTex = Paths.getSparrowAtlas('lose');
-		loser.frames = loseTex;
-		loser.animation.addByPrefix('lose', 'lose', 24, false);
-		loser.animation.play('lose');
-		add(loser);
+			var loser:FlxSprite = new FlxSprite(100, 100);
+			var loseTex = Paths.getSparrowAtlas('lose');
+			loser.frames = loseTex;
+			loser.animation.addByPrefix('lose', 'lose', 24, false);
+			loser.animation.play('lose');
+			add(loser);
 
 		var bf:Boyfriend = new Boyfriend(bfX, bfY);
 		// bf.scrollFactor.set();
@@ -36,13 +36,13 @@ class GameOverState extends FlxTransitionableState
 		bf.playAnim('firstDeath');
 
 		FlxG.camera.follow(bf, LOCKON, 0.001);
-
-		var restart:FlxSprite = new FlxSprite(500, 50).loadGraphic(Paths.image('restart'));
-		restart.setGraphicSize(Std.int(restart.width * 0.6));
-		restart.updateHitbox();
-		restart.alpha = 0;
-		restart.antialiasing = true;
-		add(restart);
+		
+			var restart:FlxSprite = new FlxSprite(500, 50).loadGraphic(Paths.image('restart'));
+			restart.setGraphicSize(Std.int(restart.width * 0.6));
+			restart.updateHitbox();
+			restart.alpha = 0;
+			restart.antialiasing = true;
+			add(restart);
 
 		FlxG.sound.music.fadeOut(2, FlxG.sound.music.volume * 0.6);
 
@@ -56,14 +56,6 @@ class GameOverState extends FlxTransitionableState
 
 	override function update(elapsed:Float)
 	{
-		#if (mobileC || mobileCweb)
-		var justTouched:Bool = false;
-
-		for (touch in FlxG.touches.list)
-			if (touch.justPressed)
-				justTouched = true;
-		#end
-
 		var pressed:Bool = FlxG.keys.justPressed.ANY;
 
 		var gamepad:FlxGamepad = FlxG.gamepads.lastActive;
@@ -76,7 +68,7 @@ class GameOverState extends FlxTransitionableState
 
 		pressed = false;
 
-		if (#if (mobileC || mobileCweb) justTouched || #end pressed && !fading)
+		if (pressed && !fading)
 		{
 			fading = true;
 			FlxG.sound.music.fadeOut(0.5, 0, function(twn:FlxTween)
